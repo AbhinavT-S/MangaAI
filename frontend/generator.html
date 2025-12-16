@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AI Manga Creator</title>
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<!-- Material Icons -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Theme Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#46ec13",
+                        "accent-pink": "#FF2C8B",
+                        "background-dark": "#0D0D0F",
+                        "surface-dark": "#1A1A1E",
+                        "input-dark": "#08080A",
+                    },
+                    fontFamily: {
+                        "display": ["Manrope", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "1rem", 
+                        "lg": "1.5rem", 
+                        "xl": "2rem", 
+                        "2xl": "3rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+<style>
+        /* Custom scrollbar for textarea */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #1A1A1E; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #2c3928; 
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #46ec13; 
+        }
+        
+        .wrapper .counter {
+            position: absolute;
+            right: 8px;
+            bottom: 6px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body class="bg-background-dark text-white font-display overflow-x-hidden min-h-screen flex flex-col">
+<!-- Top Navigation -->
+<header class="w-full border-b border-white/5 bg-background-dark/80 backdrop-blur-md sticky top-0 z-50">
+<div class="max-w-[1440px] mx-auto px-6 h-20 flex items-center justify-between">
+<!-- Logo -->
+<div class="flex items-center gap-3">
+<div class="size-10 bg-surface-dark rounded-xl flex items-center justify-center border border-white/10 text-primary">
+<span class="material-symbols-outlined text-2xl">auto_awesome_mosaic</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-white">Manga<span class="text-primary">AI</span></h1>
+</div>
+<!-- Nav Links -->
+<nav class="hidden md:flex items-center gap-10">
+<a class="text-sm font-medium text-white/60 hover:text-white transition-colors" href="index.html">Home</a>
+<a class="text-sm font-medium text-primary flex items-center gap-2" href="generator.html">Generator</span>
+</a>
+<a class="text-sm font-medium text-white/60 hover:text-white transition-colors" href="editor.html">Editor</a>
+</nav>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow flex items-center justify-center py-12 px-4 relative overflow-hidden">
+<!-- Ambient Background Glows -->
+<div class="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="absolute bottom-1/4 right-1/4 w-[500px] h-[500px] bg-accent-pink/5 rounded-full blur-[120px] pointer-events-none"></div>
+<div class="w-full max-w-5xl z-10">
+<!-- Headline -->
+<div class="text-center mb-10">
+<h2 class="text-4xl md:text-5xl font-bold mb-4 tracking-tight">Create Your Manga</h2>
+<p class="text-white/50 text-lg max-w-xl mx-auto">Turn your stories into visual panels instantly. Describe your scene, pick your layout, and let AI do the rest.</p>
+</div>
+<!-- Generator Card -->
+<div class="bg-surface-dark border border-white/5 rounded-[2.5rem] p-6 md:p-10 shadow-2xl relative overflow-hidden">
+<!-- Decorative top gradient line -->
+<div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary/50 to-transparent opacity-50"></div>
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-10">
+<!-- LEFT COLUMN: Inputs -->
+<div class="lg:col-span-5 flex flex-col gap-6">
+<!-- Prompt Input -->
+<div id="promptInput" class="space-y-3">
+<label class="flex items-center justify-between text-sm font-semibold text-white/80 pl-1">
+<span class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">edit_note</span> Story Prompt</span>
+</label>
+<div class="relativegroup">
+  <textarea id="myText" maxlength="1500" class="w-full bg-input-dark border border-white/10 rounded-xl p-5 text-base text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all min-h-[180px] resize-none leading-relaxed" placeholder="Describe your scene (e.g., A cyberpunk samurai walking in rain, neon lights reflecting on wet pavement, high contrast, manga style...)"></textarea>
+  <div id="counter" class="counter">0/1500</div>
+  <script>
+  const textarea = document.getElementById('myText');
+  const counter  = document.getElementById('counter');
+  const max = 1500;
+
+  textarea.addEventListener('input', () => {
+    const len = textarea.value.length;
+    counter.textContent = `${len}/${max}`;
+  });
+</script>
+<div class="absolute bottom-4 right-4 flex gap-2">
+</button>
+</div>
+</div>
+</div>
+<!-- Panel Selection -->
+<div class="space-y-3">
+<label class="text-sm font-semibold text-white/80 pl-1 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[18px]">grid_view</span> Layout
+                            </label>
+<div class="relative">
+<select id="layoutSelect" class="w-full appearance-none bg-input-dark border border-white/10 rounded-xl h-14 px-5 text-base text-white focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all cursor-pointer">
+<option value="1">1 Panels</option>
+<option value="2">2 Panels (Vertical Strip)</option>
+<option value="3">3 Panels (Classic Strip)</option>
+<option value="4">4 Panels (2x2 Grid)</option>
+<option value="6">6 Panels (Page Layout)</option>
+</select>
+</div>
+</div>
+<!-- Generate Button -->
+<div class="pt-4 mt-auto">
+<button id="generateBtn" class="w-full h-14 bg-accent-pink hover:bg-[#ff449b] text-white rounded-full font-bold text-lg tracking-wide shadow-[0_0_20px_rgba(255,44,139,0.3)] hover:shadow-[0_0_30px_rgba(255,44,139,0.5)] transition-all transform active:scale-[0.98] flex items-center justify-center gap-3">
+<span class="material-symbols-outlined">stars</span>GENERATE PANELS</button>
+<div class="flex justify-center mt-3 gap-2 text-xs text-white/30 items-center">
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN: Preview / Output -->
+<div id="previewContainer" class="lg:col-span-7 bg-input-dark rounded-[2rem] border border-white/5 p-6 relative min-h-[400px] flex flex-col">
+<!-- Header for output -->
+<div class="flex justify-between items-center mb-6">
+<h3 class="text-sm font-bold text-white/80 uppercase tracking-wider">Preview</h3>
+<div class="flex gap-2">
+<button class="size-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+<a class="material-symbols-outlined text-[18px]" href="#">download</a>
+</button>
+<button class="size-8 rounded-full bg-white/5 flex items-center justify-center text-white/40 hover:text-white hover:bg-white/10 transition-colors">
+<span id="fullscreenBtn" class="material-symbols-outlined text-[18px] cursor-pointer">fullscreen</span>
+</button>
+</div>
+</div>
+<!-- Empty Grid -->
+<div id="previewGrid" class="flex-1 grid grid-cols-2 gap-4 h-full">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<style>
+        @keyframes shimmer {
+            100% {
+                transform: translateX(100%);
+            }
+        }
+        .mask-image-gradient {
+            -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+            mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+        }
+    </style>
+    <script>
+const layoutSelect = document.getElementById("layoutSelect");
+const previewGrid = document.getElementById("previewGrid");
+
+function generatePanels(count) {
+  previewGrid.innerHTML = "";
+
+  // adjust grid columns dynamically
+  if (count <= 3) {
+    previewGrid.className = "flex-1 grid grid-cols-1 gap-4 h-full";
+  } else if (count === 4) {
+    previewGrid.className = "flex-1 grid grid-cols-2 gap-4 h-full";
+  } else {
+    previewGrid.className = "flex-1 grid grid-cols-3 gap-4 h-full";
+  }
+
+  for (let i = 1; i <= count; i++) {
+    const panel = document.createElement("div");
+    panel.className =
+      "bg-surface-dark rounded-xl border border-white/5 flex flex-col items-center justify-center cursor-pointer relative overflow-hidden aspect-[4/5]";
+
+    panel.innerHTML = `
+      <span class="material-symbols-outlined text-4xl text-white/20 mb-2">image</span>
+      <span class="text-xs text-white/30 font-medium">Panel ${i}</span>
+    `;
+
+    previewGrid.appendChild(panel);
+  }
+}
+
+// initial load
+generatePanels(layoutSelect.value);
+
+// update on change
+layoutSelect.addEventListener("change", (e) => {
+  generatePanels(parseInt(e.target.value));
+});
+</script>
+<script>
+const fullscreenBtn = document.getElementById("fullscreenBtn");
+const previewContainer = document.getElementById("previewContainer");
+
+fullscreenBtn.addEventListener("click", () => {
+  if (!document.fullscreenElement) {
+    previewContainer.requestFullscreen();
+  } else {
+    document.exitFullscreen();
+  }
+});
+</script>
+<script src="generator.js"></script>
+</body></html>
