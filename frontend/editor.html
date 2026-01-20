@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 
-<html class="dark" lang="en"><head>
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Manga Editor</title>
-<!-- Fonts -->
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<!-- Tailwind CSS -->
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<!-- Theme Configuration -->
-<script id="tailwind-config">
+<html class="dark" lang="en">
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Manga Editor</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com" rel="preconnect" />
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect" />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@200..800&amp;display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet" />
+    <!-- Manga Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Permanent+Marker&family=Creepster&family=Black+Ops+One&family=Bungee&family=Righteous&display=swap" rel="stylesheet" />
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <!-- Theme Configuration -->
+    <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
             theme: {
                 extend: {
                     colors: {
                         "primary": "#46ec13",
-                        "secondary": "#FF2C8B", 
+                        "secondary": "#FF2C8B",
                         "background-light": "#f6f8f6",
                         "background-dark": "#0D0D0F", // User requested #0D0D0F
                         "panel-dark": "#161619",
@@ -30,9 +33,9 @@
                         "display": ["Manrope", "sans-serif"]
                     },
                     borderRadius: {
-                        "DEFAULT": "1rem", 
-                        "lg": "2rem", 
-                        "xl": "3rem", 
+                        "DEFAULT": "1rem",
+                        "lg": "2rem",
+                        "xl": "3rem",
                         "full": "9999px"
                     },
                 },
@@ -40,389 +43,667 @@
         }
     </script>
     <style>
-        .resize-handle {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            right: -6px;
-            bottom: -6px;
-            background: #46ec13;
-            border: 2px solid black;
-            cursor: nwse-resize;
+        .panel-selected {
+            outline: 3px solid #46ec13;
+        }
+
+        /* Speech Bubble Styles */
+        .bubble-normal {
+            background: white;
+            border: 3px solid black;
             border-radius: 50%;
-            }
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+            font-weight: bold;
+        }
 
-        .resizing {
-            user-select: none;
-            }
-</style>
+        .bubble-thought {
+            background: white;
+            border: 3px dashed black;
+            border-radius: 50%;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+            font-weight: normal;
+            font-style: italic;
+        }
 
+        .bubble-shout {
+            background: white;
+            border: 4px solid black;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            clip-path: polygon(
+                10% 0%, 15% 3%, 20% 0%, 25% 3%, 30% 0%, 35% 3%, 40% 0%, 45% 3%, 50% 0%, 55% 3%, 60% 0%, 65% 3%, 70% 0%, 75% 3%, 80% 0%, 85% 3%, 90% 0%,
+                97% 10%, 100% 15%, 97% 20%, 100% 25%, 97% 30%, 100% 35%, 97% 40%, 100% 45%, 97% 50%, 100% 55%, 97% 60%, 100% 65%, 97% 70%, 100% 75%, 97% 80%, 100% 85%, 97% 90%,
+                90% 100%, 85% 97%, 80% 100%, 75% 97%, 70% 100%, 65% 97%, 60% 100%, 55% 97%, 50% 100%, 45% 97%, 40% 100%, 35% 97%, 30% 100%, 25% 97%, 20% 100%, 15% 97%, 10% 100%,
+                3% 90%, 0% 85%, 3% 80%, 0% 75%, 3% 70%, 0% 65%, 3% 60%, 0% 55%, 3% 50%, 0% 45%, 3% 40%, 0% 35%, 3% 30%, 0% 25%, 3% 20%, 0% 15%, 3% 10%
+            );
+        }
+
+        .bubble-whisper {
+            background: white;
+            border: 2px dashed #999;
+            border-radius: 50%;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: #666;
+            font-weight: normal;
+            font-size: 0.9em;
+        }
+
+        .bubble-scream {
+            background: white;
+            border: 5px solid black;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: black;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            clip-path: polygon(
+                5% 0%, 10% 8%, 15% 0%, 20% 8%, 25% 0%, 30% 8%, 35% 0%, 40% 8%, 45% 0%, 50% 8%, 55% 0%, 60% 8%, 65% 0%, 70% 8%, 75% 0%, 80% 8%, 85% 0%, 90% 8%, 95% 0%,
+                100% 10%, 92% 15%, 100% 20%, 92% 25%, 100% 30%, 92% 35%, 100% 40%, 92% 45%, 100% 50%, 92% 55%, 100% 60%, 92% 65%, 100% 70%, 92% 75%, 100% 80%, 92% 85%, 100% 90%,
+                95% 100%, 90% 92%, 85% 100%, 80% 92%, 75% 100%, 70% 92%, 65% 100%, 60% 92%, 55% 100%, 50% 92%, 45% 100%, 40% 92%, 35% 100%, 30% 92%, 25% 100%, 20% 92%, 15% 100%, 10% 92%, 5% 100%,
+                0% 90%, 8% 85%, 0% 80%, 8% 75%, 0% 70%, 8% 65%, 0% 60%, 8% 55%, 0% 50%, 8% 45%, 0% 40%, 8% 35%, 0% 30%, 8% 25%, 0% 20%, 8% 15%, 0% 10%
+            );
+        }
+
+        .bubble-narration {
+            background: white;
+            border: 3px solid black;
+            border-radius: 8px;
+            padding: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: left;
+            color: black;
+            font-weight: normal;
+            font-style: italic;
+        }
+    </style>
 </head>
+
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white overflow-hidden h-screen flex flex-col">
-<!-- Top Navigation -->
-<header class="flex-none flex items-center justify-between border-b border-[#2c3928] bg-[#0D0D0F]/90 backdrop-blur-md px-8 py-4 z-50">
-<div class="flex items-center gap-4 text-white">
-<div class="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary">
-<span class="material-symbols-outlined text-3xl">auto_stories</span>
-</div>
-<h2 class="text-white text-xl font-bold leading-tight tracking-tight">MangaAI</h2>
-</div>
-<div class="flex flex-1 justify-end gap-8 items-center">
-<nav class="hidden md:flex items-center gap-9">
-<a class="text-gray-400 hover:text-primary transition-colors text-sm font-medium leading-normal" href="index.html">Home</a>
-<a class="text-gray-400 hover:text-primary transition-colors text-sm font-medium leading-normal" href="generator.html">Generator</a>
-<a class="text-white text-sm font-bold leading-normal border-b-2 border-primary pb-1" href="editor.html">Editor</a>
-</nav>
-<div class="h-6 w-px bg-gray-700 mx-2 hidden md:block"></div>
-<button id="exportBtn" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary hover:bg-green-400 transition-colors text-[#131811] text-sm font-bold leading-normal tracking-[0.015em]">
-<span class="truncate">Export Project</span>
-</button>
-</div>
-</header>
-<!-- Main Workspace -->
-<main class="flex-1 flex overflow-hidden relative">
-<!-- Left Toolbar -->
-<aside class="w-80 flex-none bg-panel-dark border-r border-[#2c3928] p-6 flex flex-col gap-6 z-20 shadow-xl overflow-y-auto">
-<div class="space-y-2">
-<h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Tools</h3>
-<button id="addBubbleBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all duration-200">
-<div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-primary text-white group-hover:text-black flex items-center justify-center transition-colors">
-<span class="material-symbols-outlined">chat_bubble</span>
-</div>
-<div class="text-left">
-<span class="block text-white font-bold text-sm group-hover:text-primary">Speech Bubble</span>
-<span class="block text-gray-500 text-xs mt-0.5">Drag to canvas</span>
-</div>
-</button>
-<button id="addTextBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all duration-200">
-<div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-primary text-white group-hover:text-black flex items-center justify-center transition-colors">
-<span class="material-symbols-outlined">format_shapes</span>
-</div>
-<div class="text-left">
-<span class="block text-white font-bold text-sm group-hover:text-primary">Text Overlay</span>
-<span class="block text-gray-500 text-xs mt-0.5">Add narration text</span>
-</div>
-</button>
-<button id="deleteBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-secondary/10 border border-transparent hover:border-secondary/30 transition-all duration-200 mt-8">
-<div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-secondary text-white group-hover:text-white flex items-center justify-center transition-colors">
-<span class="material-symbols-outlined">delete</span>
-</div>
-<div class="text-left">
-<span class="block text-white font-bold text-sm group-hover:text-secondary">Delete Item</span>
-<span class="block text-gray-500 text-xs mt-0.5">Remove selected</span>
-</div>
-</button>
-</div>
-<div class="flex justify-between items-center">
-  <span class="text-sm text-gray-300">Font Size</span>
-  <span id="fontSizeLabel" class="text-xs text-primary font-mono">16px</span>
-</div>
-<input id="fontSizeRange"
-       type="range"
-       min="10"
-       max="40"
-       value="16"
-       class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary"/>
-<div class="space-y-2 mt-4">
-  <span class="text-sm text-gray-300">Font Family</span>
+    <!-- Top Navigation -->
+    <header class="flex-none flex items-center justify-between border-b border-[#2c3928] bg-[#0D0D0F]/90 backdrop-blur-md px-8 py-4 z-50">
+        <div class="flex items-center gap-4 text-white">
+            <div class="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary">
+                <span class="material-symbols-outlined text-3xl">auto_stories</span>
+            </div>
+            <h2 class="text-white text-xl font-bold leading-tight tracking-tight">MangaAI</h2>
+        </div>
+        <div class="flex flex-1 justify-end gap-8 items-center">
+            <nav class="hidden md:flex items-center gap-9">
+                <a class="text-gray-400 hover:text-primary transition-colors text-sm font-medium leading-normal" href="index.html">Home</a>
+                <a class="text-gray-400 hover:text-primary transition-colors text-sm font-medium leading-normal" href="generator.html">Generator</a>
+                <a class="text-white text-sm font-bold leading-normal border-b-2 border-primary pb-1" href="editor.html">Editor</a>
+            </nav>
+            <div class="h-6 w-px bg-gray-700 mx-2 hidden md:block"></div>
+            <button id="exportBtn" class="flex cursor-pointer items-center justify-center overflow-hidden rounded-full h-10 px-6 bg-primary hover:bg-green-400 transition-colors text-[#131811] text-sm font-bold leading-normal tracking-[0.015em]">
+                <span class="truncate">Export Project</span>
+            </button>
+        </div>
+    </header>
+    <!-- Main Workspace -->
+    <main class="flex-1 flex overflow-hidden relative">
+        <!-- Left Toolbar -->
+        <aside class="w-80 flex-none bg-panel-dark border-r border-[#2c3928] p-6 flex flex-col gap-6 z-20 shadow-xl overflow-y-auto">
+            <div class="space-y-2">
+                <h3 class="text-gray-400 text-xs font-bold uppercase tracking-wider mb-4">Tools</h3>
+                <button id="addBubbleBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all duration-200">
+                    <div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-primary text-white group-hover:text-black flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined">chat_bubble</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="block text-white font-bold text-sm group-hover:text-primary">Speech Bubble</span>
+                        <span class="block text-gray-500 text-xs mt-0.5">Drag to canvas</span>
+                    </div>
+                </button>
+                <button id="addTextBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-primary/10 border border-transparent hover:border-primary/30 transition-all duration-200">
+                    <div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-primary text-white group-hover:text-black flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined">format_shapes</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="block text-white font-bold text-sm group-hover:text-primary">Text Overlay</span>
+                        <span class="block text-gray-500 text-xs mt-0.5">Add narration text</span>
+                    </div>
+                </button>
+                <button id="deleteBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl bg-[#1e1e24] hover:bg-secondary/10 border border-transparent hover:border-secondary/30 transition-all duration-200 mt-8">
+                    <div class="size-10 rounded-full bg-[#2a2a33] group-hover:bg-secondary text-white group-hover:text-white flex items-center justify-center transition-colors">
+                        <span class="material-symbols-outlined">delete</span>
+                    </div>
+                    <div class="text-left">
+                        <span class="block text-white font-bold text-sm group-hover:text-secondary">Delete Item</span>
+                        <span class="block text-gray-500 text-xs mt-0.5">Remove selected</span>
+                    </div>
+                </button>
+            </div>
+            <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-300">Font Size</span>
+                <span id="fontSizeLabel" class="text-xs text-primary font-mono">16px</span>
+            </div>
+            <input id="fontSizeRange" type="range" min="10" max="40" value="16" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-primary" />
+            <div class="space-y-2 mt-4">
+                <span class="text-sm text-gray-300">Font Family</span>
 
-  <select id="fontFamilySelect"
-          class="w-full bg-[#2a2a33] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none">
-    <option value="Manrope">Manrope</option>
-    <option value="Bookman Old Style">Bookman Old Style</option>
-    <option value="Comic Sans MS">Comic Sans</option>
-    <option value="Chiller">Chiller</option>
-    <option value="Ink Free">Ink Free</option>
-  </select>
-</div>
-</div>
-</aside>
-<!-- Canvas Area -->
-<section class="flex-1 bg-background-dark relative flex items-start justify-center p-12 overflow-auto">
+                <select id="fontFamilySelect" class="w-full bg-[#2a2a33] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none">
+                    <option value="Bangers">Bangers (Sound Effects)</option>
+                    <option value="Permanent Marker">Permanent Marker (Casual)</option>
+                    <option value="Righteous" selected>Righteous (Dialogue)</option>
+                    <option value="Black Ops One">Black Ops One (Action)</option>
+                    <option value="Bungee">Bungee (Emphasis)</option>
+                    <option value="Creepster">Creepster (Horror)</option>
+                    <option value="Manrope">Manrope (Clean)</option>
+                </select>
+            </div>
+            
+            <div class="space-y-2 mt-4">
+                <span class="text-sm text-gray-300">Bubble Type</span>
 
-  <!-- Manga Page Canvas -->
-  <div id="mangaCanvas"
-       class="relative bg-white shadow-2xl shadow-primary/10 ring-1 ring-white/10
-              z-30 overflow-visible flex flex-col">
+                <select id="bubbleTypeSelect" class="w-full bg-[#2a2a33] text-white text-sm rounded-lg px-3 py-2 border border-gray-700 focus:outline-none">
+                    <option value="normal">💬 Normal Speech</option>
+                    <option value="thought">💭 Thought Bubble</option>
+                    <option value="shout">‼️ Shout</option>
+                    <option value="whisper">🤫 Whisper</option>
+                    <option value="scream">😱 Scream</option>
+                    <option value="narration">📖 Narration Box</option>
+                </select>
+            </div>
+            </div>
+            <!-- Zoom Controls -->
+            <div class="mt-6 space-y-2">
+                <span class="text-sm text-gray-300">Canvas Zoom</span>
 
-    <!-- PANEL GRID (AUTO HEIGHT) -->
-    <div id="panelGrid" class="grid gap-2 p-4 bg-white"></div>
+                <div class="flex items-center justify-between bg-[#1e1e24]
+              border border-gray-700 rounded-full px-3 py-2">
 
-  </div>
+                    <button id="zoomOutBtn" class="size-8 rounded-full hover:bg-gray-700 text-white">
+                        −
+                    </button>
 
-  <!-- Zoom Controls -->
-  <div class="absolute bottom-8 right-8 bg-[#1e1e24] border border-gray-700 rounded-full
-              p-2 flex items-center gap-2 shadow-lg z-20">
-    <button id="zoomOutBtn" class="size-8 rounded-full hover:bg-gray-700 text-white">−</button>
-    <span id="zoomLabel" class="text-xs text-gray-300 font-mono w-12 text-center">100%</span>
-    <button id="zoomInBtn" class="size-8 rounded-full hover:bg-gray-700 text-white">+</button>
-  </div>
+                    <span id="zoomLabel" class="text-xs text-primary font-mono w-12 text-center">
+                        100%
+                    </span>
 
-</section>
-</main>
-<script>
-const canvas = document.getElementById("mangaCanvas");
-const addBubbleBtn = document.getElementById("addBubbleBtn");
-const addTextBtn = document.getElementById("addTextBtn");
-const deleteBtn = document.getElementById("deleteBtn");
-const exportBtn = document.getElementById("exportBtn");
+                    <button id="zoomInBtn" class="size-8 rounded-full hover:bg-gray-700 text-white">
+                    </button>
 
-let selectedElement = null;
+                </div>
+                <div class="space-y-2 mt-4">
+                    <label class="text-sm text-gray-300 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary text-base">auto_awesome</span>
+                        Regeneration Prompt (optional)
+                    </label>
 
-/* ================= DRAG FUNCTION ================= */
+                    <textarea id="regenPrompt" rows="3" placeholder="e.g. closer camera, angry expression, heavier rain..." class="w-full bg-[#2a2a33] text-white text-xs rounded-lg p-3
+           border border-gray-700 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all placeholder:text-gray-500">
+  </textarea>
+                </div>
+            </div>
+            <button id="regenPanelBtn" class="w-full group flex items-center gap-4 p-4 rounded-2xl
+          bg-[#1e1e24] hover:bg-primary/10 border border-transparent
+          hover:border-primary/30 transition-all duration-200 mt-6">
 
-function makeDraggable(el) {
-  el.addEventListener("mousedown", (e) => {
+                <div class="size-10 rounded-full bg-[#2a2a33]
+              group-hover:bg-primary text-white
+              group-hover:text-black flex items-center justify-center">
+                    <span class="material-symbols-outlined">refresh</span>
+                </div>
 
-    // ✅ IF clicking editable text → allow typing
-    if (e.target.closest("[contenteditable]")) return;
-    if (e.target.classList.contains("resize-handle")) return;
+                <div class="text-left">
+                    <span class="block text-white font-bold text-sm group-hover:text-primary">
+                        Regenerate Panel
+                    </span>
+                    <span class="block text-gray-500 text-xs mt-0.5">
+                        Only selected panel
+                    </span>
+                </div>
+            </button>
+        </aside>
+        <!-- Canvas Area -->
+        <section class="flex-1 bg-background-dark relative flex items-start justify-center p-12 overflow-auto">
 
+            <!-- Manga Page Canvas -->
+            <div id="mangaCanvas" class="relative bg-white shadow-2xl shadow-primary/10 ring-1 ring-white/10
+               z-30 overflow-visible flex flex-col">
 
-    e.preventDefault();
-    selectedElement = el;
+                <!-- PANEL GRID (AUTO HEIGHT) -->
+                <div id="panelGrid" class="grid gap-2 p-4 bg-white"></div>
 
-    const canvasRect = canvas.getBoundingClientRect();
-    const elRect = el.getBoundingClientRect();
+            </div>
+        </section>
+    </main>
+    <script>
+        const canvas = document.getElementById("mangaCanvas");
+        const addBubbleBtn = document.getElementById("addBubbleBtn");
+        const addTextBtn = document.getElementById("addTextBtn");
+        const deleteBtn = document.getElementById("deleteBtn");
+        const exportBtn = document.getElementById("exportBtn");
 
-    const offsetX = e.clientX - elRect.left;
-    const offsetY = e.clientY - elRect.top;
+        let selectedElement = null;
+        let selectedPanel = null;
+        // ===== LOCKED NEGATIVE PROMPT =====
+        const LOCKED_NEGATIVE =
+            "low quality, blurry, bad anatomy, extra limbs, distorted face, watermark, text";
 
-    function onMouseMove(e) {
-      el.style.left =
-        (e.clientX - canvasRect.left - offsetX) + "px";
-      el.style.top =
-        (e.clientY - canvasRect.top - offsetY) + "px";
-    }
+        /* ================= DRAG FUNCTION ================= */
 
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", () => {
-      document.removeEventListener("mousemove", onMouseMove);
-    }, { once: true });
-  });
+        function makeDraggable(el) {
+            el.addEventListener("mousedown", (e) => {
 
-  el.addEventListener("click", () => {
-    document.querySelectorAll(".selected")
-      .forEach(i => i.classList.remove("selected"));
-    el.classList.add("selected");
-    selectedElement = el;
-  });
-}
-function makeResizable(el) {
-  const handle = el.querySelector(".resize-handle");
-  if (!handle) return;
-
-  handle.addEventListener("mousedown", (e) => {
-    e.stopPropagation();
-    e.preventDefault();
-
-    el.classList.add("resizing");
-
-    const startX = e.clientX;
-    const startY = e.clientY;
-    const startWidth = el.offsetWidth;
-    const startHeight = el.offsetHeight;
-
-    function onMouseMove(e) {
-      const dx = (e.clientX - startX) / zoomLevel;
-      const dy = (e.clientY - startY) / zoomLevel;
-
-      el.style.width = Math.max(120, startWidth + dx) + "px";
-      el.style.height = Math.max(60, startHeight + dy) + "px";
-    }
-
-    document.addEventListener("mousemove", onMouseMove);
-    document.addEventListener("mouseup", () => {
-      document.removeEventListener("mousemove", onMouseMove);
-      el.classList.remove("resizing");
-    }, { once: true });
-  });
-}
+                // ✅ IF clicking editable text → allow typing
+                if (e.target.closest("[contenteditable]")) return;
+                if (e.target.classList.contains("resize-handle")) return;
 
 
+                e.preventDefault();
+                selectedElement = el;
 
-/* ================= SPEECH BUBBLE ================= */
+                const canvasRect = canvas.getBoundingClientRect();
+                const elRect = el.getBoundingClientRect();
 
-addBubbleBtn.addEventListener("click", () => {
-  const bubble = document.createElement("div");
+                const offsetX = e.clientX - elRect.left;
+                const offsetY = e.clientY - elRect.top;
 
-  bubble.className =
-    "absolute bg-white border-2 border-black rounded-full px-4 py-3 max-w-[300px] shadow-lg cursor-move z-[9999]";
+                function onMouseMove(e) {
+                    el.style.left =
+                        (e.clientX - canvasRect.left - offsetX) + "px";
+                    el.style.top =
+                        (e.clientY - canvasRect.top - offsetY) + "px";
+                }
 
-  bubble.style.top = "40px";
-  bubble.style.left = "40px";
-  bubble.style.width = "200px";
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", () => {
+                    document.removeEventListener("mousemove", onMouseMove);
+                }, {
+                    once: true
+                });
+            });
 
-  bubble.innerHTML = `
-    <p contenteditable="true"
-       class="text-black text-xs font-bold text-center leading-tight focus:outline-none">
-       Edit text
-    </p>
+            el.addEventListener("click", () => {
+                document.querySelectorAll(".selected")
+                    .forEach(i => i.classList.remove("selected"));
+                el.classList.add("selected");
+                selectedElement = el;
+            });
+        }
 
-    <div class="absolute -bottom-2 left-1/2 -translate-x-1/2
-                w-4 h-4 bg-white border-r-2 border-b-2
-                border-black rotate-45"></div>
+        function makeResizable(el) {
+            const handle = el.querySelector(".resize-handle");
+            if (!handle) return;
 
-    
-  `;
+            handle.addEventListener("mousedown", (e) => {
+                e.stopPropagation();
+                e.preventDefault();
 
-  canvas.appendChild(bubble);
-  makeDraggable(bubble);
-  makeResizable(bubble);
-});
+                el.classList.add("resizing");
 
-/* ================= TEXT OVERLAY ================= */
+                const startX = e.clientX;
+                const startY = e.clientY;
+                const startWidth = el.offsetWidth;
+                const startHeight = el.offsetHeight;
+
+                function onMouseMove(e) {
+                    const dx = (e.clientX - startX) / zoomLevel;
+                    const dy = (e.clientY - startY) / zoomLevel;
+
+                    el.style.width = Math.max(120, startWidth + dx) + "px";
+                    el.style.height = Math.max(60, startHeight + dy) + "px";
+                }
+
+                document.addEventListener("mousemove", onMouseMove);
+                document.addEventListener("mouseup", () => {
+                    document.removeEventListener("mousemove", onMouseMove);
+                    el.classList.remove("resizing");
+                }, {
+                    once: true
+                });
+            });
+        }
 
 
-addTextBtn.addEventListener("click", () => {
-  const textOverlay = document.createElement("div");
 
-  textOverlay.style.position = "absolute";
-  textOverlay.style.top = "120px";
-  textOverlay.style.left = "120px";
-  textOverlay.style.zIndex = "9999";
+        /* ================= SPEECH BUBBLE ================= */
 
-  textOverlay.className =
-    "bg-white border border-black border-primary px-2 py-1 cursor-move select-none";
+        addBubbleBtn.addEventListener("click", () => {
+            const bubbleType = document.getElementById("bubbleTypeSelect").value;
+            const fontFamily = document.getElementById("fontFamilySelect").value;
+            const fontSize = document.getElementById("fontSizeRange").value;
+            
+            const bubble = document.createElement("div");
 
-  textOverlay.innerHTML = `
+            // Apply bubble type class
+            bubble.className = `bubble-${bubbleType} absolute cursor-move z-[9999]`;
+
+            bubble.style.top = "40px";
+            bubble.style.left = "40px";
+            bubble.style.width = "200px";
+            bubble.style.height = "120px";
+            bubble.style.fontFamily = fontFamily;
+            bubble.style.fontSize = fontSize + "px";
+
+            // Create editable text inside bubble
+            const textSpan = document.createElement("span");
+            textSpan.contentEditable = true;
+            textSpan.innerText = "Edit text";
+            textSpan.spellcheck = false;
+            textSpan.style.outline = "none";
+            textSpan.style.cursor = "text";
+            
+            bubble.appendChild(textSpan);
+            
+            // Add resize handle
+            const resizeHandle = document.createElement("div");
+            resizeHandle.className = "resize-handle";
+            resizeHandle.style.position = "absolute";
+            resizeHandle.style.bottom = "0";
+            resizeHandle.style.right = "0";
+            resizeHandle.style.width = "12px";
+            resizeHandle.style.height = "12px";
+            resizeHandle.style.background = "#46ec13";
+            resizeHandle.style.cursor = "se-resize";
+            resizeHandle.style.borderRadius = "50%";
+            resizeHandle.style.zIndex = "10000";
+            bubble.appendChild(resizeHandle);
+
+            canvas.appendChild(bubble);
+            makeDraggable(bubble);
+            makeResizable(bubble);
+        });
+
+        /* ================= TEXT OVERLAY ================= */
+
+
+        addTextBtn.addEventListener("click", () => {
+            const fontFamily = document.getElementById("fontFamilySelect").value;
+            const fontSize = document.getElementById("fontSizeRange").value;
+            
+            const textOverlay = document.createElement("div");
+
+            textOverlay.style.position = "absolute";
+            textOverlay.style.top = "120px";
+            textOverlay.style.left = "120px";
+            textOverlay.style.zIndex = "9999";
+            textOverlay.style.fontFamily = fontFamily;
+            textOverlay.style.fontSize = fontSize + "px";
+            textOverlay.style.minWidth = "100px";
+            textOverlay.style.minHeight = "40px";
+
+            textOverlay.className =
+                "bg-white border border-black border-primary px-2 py-1 cursor-move select-none";
+
+            textOverlay.innerHTML = `
     <span contenteditable="true"
-      class="text-black text-[12px] font-black italic uppercase tracking-widest
+      class="text-black font-black italic uppercase tracking-widest
              cursor-text select-text focus:outline-none"
       spellcheck="false">
       Single click to edit
     </span>
   `;
+            
+            // Add resize handle
+            const resizeHandle = document.createElement("div");
+            resizeHandle.className = "resize-handle";
+            resizeHandle.style.position = "absolute";
+            resizeHandle.style.bottom = "0";
+            resizeHandle.style.right = "0";
+            resizeHandle.style.width = "12px";
+            resizeHandle.style.height = "12px";
+            resizeHandle.style.background = "#46ec13";
+            resizeHandle.style.cursor = "se-resize";
+            resizeHandle.style.borderRadius = "50%";
+            resizeHandle.style.zIndex = "10000";
+            textOverlay.appendChild(resizeHandle);
 
-  canvas.appendChild(textOverlay);
-  makeDraggable(textOverlay);
-});
+            canvas.appendChild(textOverlay);
+            makeDraggable(textOverlay);
+            makeResizable(textOverlay);
+        });
 
-/* ================= DELETE ================= */
+        /* ================= DELETE ================= */
 
-deleteBtn.addEventListener("click", () => {
-  if (selectedElement) {
-    selectedElement.remove();
-    selectedElement = null;
-  }
-});
+        deleteBtn.addEventListener("click", () => {
+            if (selectedElement) {
+                selectedElement.remove();
+                selectedElement = null;
+            }
+        });
+        const regenPanelBtn = document.getElementById("regenPanelBtn");
 
-/* ================= EXPORT ================= */
+        regenPanelBtn.addEventListener("click", async () => {
+            if (!selectedPanel) {
+                alert("Select a panel to regenerate");
+                return;
+            }
 
-exportBtn.addEventListener("click", async () => {
-  // Remove outlines before export
-  document.querySelectorAll(".selected").forEach(el =>
-    el.classList.remove("selected")
-  );
+            const panelIndex = selectedPanel.dataset.index;
+            const panelPrompts =
+                JSON.parse(localStorage.getItem("mangaPanelPrompts"));
 
-  const canvasImage = await html2canvas(canvas, {
-    scale: 2,
-    backgroundColor: "#ffffff"
-  });
+            if (!panelPrompts || !panelPrompts[panelIndex]) {
+                alert("No prompt found for this panel");
+                regenPanelBtn.disabled = false;
+                regenPanelBtn.innerText = "Regenerate Panel";
+                return;
+            }
 
-  const link = document.createElement("a");
-  link.download = "manga-page.png";
-  link.href = canvasImage.toDataURL("image/png");
-  link.click();
-});
+            const regenExtra =
+                document.getElementById("regenPrompt")?.value.trim();
 
-/* ===== APPLY FONT SIZE ===== */
-fontSizeRange.addEventListener("input", () => {
-  if (!selectedElement) return;
+            let prompt = panelPrompts[panelIndex];
 
-  const editable = selectedElement.querySelector("[contenteditable]");
-  if (!editable) return;
-
-  editable.style.fontSize = fontSizeRange.value + "px";
-  fontSizeLabel.textContent = fontSizeRange.value + "px";
-});
-
-/* ===== APPLY FONT FAMILY ===== */
-fontFamilySelect.addEventListener("change", () => {
-  if (!selectedElement) return;
-
-  const editable = selectedElement.querySelector("[contenteditable]");
-  if (!editable) return;
-
-  editable.style.fontFamily = fontFamilySelect.value;
-});
-
-/* ================= ZOOM SYSTEM ================= */
-
-const zoomInBtn = document.getElementById("zoomInBtn");
-const zoomOutBtn = document.getElementById("zoomOutBtn");
-const zoomLabel = document.getElementById("zoomLabel");
-
-let zoomLevel = 1;
-const MIN_ZOOM = 0.5;
-const MAX_ZOOM = 2;
-const ZOOM_STEP = 0.1;
-
-function applyZoom() {
-  canvas.style.transform = `scale(${zoomLevel})`;
-  canvas.style.transformOrigin = "center center";
-  zoomLabel.textContent = Math.round(zoomLevel * 100) + "%";
-}
-
-zoomInBtn.addEventListener("click", () => {
-  if (zoomLevel < MAX_ZOOM) {
-    zoomLevel += ZOOM_STEP;
-    applyZoom();
-  }
-});
-
-zoomOutBtn.addEventListener("click", () => {
-  if (zoomLevel > MIN_ZOOM) {
-    zoomLevel -= ZOOM_STEP;
-    applyZoom();
-  }
-});
-
-/* Initial */
-applyZoom();
-</script>
+            if (regenExtra) {
+                prompt += ", " + regenExtra;
+            }
 
 
-<style>
-.selected {
-  outline: 2px dashed #46ec13;
-}
+            regenPanelBtn.innerText = "Regenerating...";
+            regenPanelBtn.disabled = true;
 
-[contenteditable]:focus {
-  outline: none;
-}
-</style>
+            try {
+                const res = await fetch("http://localhost:3000/generate", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        prompt,
+                        negative_prompt: LOCKED_NEGATIVE,
+                        width: 512,
+                        height: 768,
+                        steps: 25
+                    }),
+                });
 
-<script>
-document.addEventListener("DOMContentLoaded", () => {
-  const panelGrid = document.getElementById("panelGrid");
-  const canvas = document.getElementById("mangaCanvas");
+                const data = await res.json();
+                const newImage = "data:image/png;base64," + data.images[0];
 
-  const panels = parseInt(localStorage.getItem("mangaPanels")) || 4;
-  const images = JSON.parse(localStorage.getItem("mangaImages")) || [];
+                selectedPanel.querySelector("img").src = newImage;
 
-  function getGrid(count) {
-    if (count === 1) return "grid-cols-1";
-    if (count === 2) return "grid-cols-1";
-    if (count === 3) return "grid-cols-1";
-    if (count === 4) return "grid-cols-2";
-    if (count === 6) return "grid-cols-2";
-    return "grid-cols-2";
-  }
-
-  // RESET classes (VERY IMPORTANT)
-  panelGrid.className = `grid gap-2 p-4 bg-white ${getGrid(panels)}`;
-
-  images.forEach(src => {
-  const img = document.createElement("img");
-  img.src = src;
-  panelGrid.appendChild(img);
-});
-
-  // Let canvas size itself naturally
-  canvas.style.width = "fit-content";
-});
-</script>
+                const images =
+                    JSON.parse(localStorage.getItem("mangaImages"));
+                images[panelIndex] = newImage;
+                localStorage.setItem("mangaImages", JSON.stringify(images));
+                localStorage.setItem(
+                    "mangaPanelPrompts",
+                    JSON.stringify(panelPrompts)
+                );
 
 
-</body></html>
+            } catch (err) {
+                alert("Failed to regenerate panel");
+                console.error(err);
+            }
+
+            regenPanelBtn.innerText = "Regenerate Panel";
+            regenPanelBtn.disabled = false;
+        });
+
+
+
+        /* ================= EXPORT ================= */
+
+        exportBtn.addEventListener("click", async () => {
+            // Remove outlines before export
+            document.querySelectorAll(".selected").forEach(el =>
+                el.classList.remove("selected")
+            );
+
+            const canvasImage = await html2canvas(canvas, {
+                scale: 2,
+                backgroundColor: "#ffffff"
+            });
+
+            const link = document.createElement("a");
+            link.download = "manga-page.png";
+            link.href = canvasImage.toDataURL("image/png");
+            link.click();
+        });
+
+        /* ===== APPLY FONT SIZE ===== */
+        fontSizeRange.addEventListener("input", () => {
+            if (!selectedElement) return;
+
+            const editable = selectedElement.querySelector("[contenteditable]");
+            if (!editable) return;
+
+            editable.style.fontSize = fontSizeRange.value + "px";
+            fontSizeLabel.textContent = fontSizeRange.value + "px";
+        });
+
+        /* ===== APPLY FONT FAMILY ===== */
+        fontFamilySelect.addEventListener("change", () => {
+            if (!selectedElement) return;
+
+            const editable = selectedElement.querySelector("[contenteditable]");
+            if (!editable) return;
+
+            editable.style.fontFamily = fontFamilySelect.value;
+        });
+
+        /* ================= ZOOM SYSTEM ================= */
+
+        const zoomInBtn = document.getElementById("zoomInBtn");
+        const zoomOutBtn = document.getElementById("zoomOutBtn");
+        const zoomLabel = document.getElementById("zoomLabel");
+
+        let zoomLevel = 1;
+        const MIN_ZOOM = 0.5;
+        const MAX_ZOOM = 2;
+        const ZOOM_STEP = 0.1;
+
+        function applyZoom() {
+            canvas.style.transform = `scale(${zoomLevel})`;
+            canvas.style.transformOrigin = "center center";
+            zoomLabel.textContent = Math.round(zoomLevel * 100) + "%";
+        }
+
+        zoomInBtn.addEventListener("click", () => {
+            if (zoomLevel < MAX_ZOOM) {
+                zoomLevel += ZOOM_STEP;
+                applyZoom();
+            }
+        });
+
+        zoomOutBtn.addEventListener("click", () => {
+            if (zoomLevel > MIN_ZOOM) {
+                zoomLevel -= ZOOM_STEP;
+                applyZoom();
+            }
+        });
+
+        /* Initial */
+        applyZoom();
+    </script>
+
+
+    <style>
+        .selected {
+            outline: 2px dashed #46ec13;
+        }
+
+        [contenteditable]:focus {
+            outline: none;
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const panelGrid = document.getElementById("panelGrid");
+            const canvas = document.getElementById("mangaCanvas");
+
+            const panels = parseInt(localStorage.getItem("mangaPanels")) || 4;
+            const images = JSON.parse(localStorage.getItem("mangaImages")) || [];
+            const savedLayout = JSON.parse(localStorage.getItem("mangaPanelLayout")) || null;
+
+            // Set canvas to manga page style with absolute positioning (same size as generator preview)
+            panelGrid.className = "relative bg-white";
+            panelGrid.style.width = "400px";
+            panelGrid.style.height = "600px";
+
+            images.forEach((src, index) => {
+                const panel = document.createElement("div");
+
+                // Use saved layout if available, otherwise use default positioning
+                if (savedLayout && savedLayout[index]) {
+                    const layout = savedLayout[index];
+                    panel.className = "absolute border-[3px] border-black bg-white cursor-pointer";
+                    panel.style.left = layout.x + "%";
+                    panel.style.top = layout.y + "%";
+                    panel.style.width = layout.width + "%";
+                    panel.style.height = layout.height + "%";
+                } else {
+                    // Fallback to grid-based positioning
+                    panel.className = "relative border-2 border-black bg-white cursor-pointer";
+                }
+
+                panel.dataset.index = index;
+
+                panel.innerHTML = `
+    <img src="${src}"
+         class="w-full h-full object-cover grayscale contrast-125 pointer-events-none" />
+  `;
+
+                // PANEL SELECTION
+                panel.addEventListener("click", () => {
+                    document.querySelectorAll(".panel-selected")
+                        .forEach(p => p.classList.remove("panel-selected"));
+
+                    panel.classList.add("panel-selected");
+                    selectedPanel = panel;
+                });
+
+                panelGrid.appendChild(panel);
+            });
+
+
+            // Let canvas size itself naturally
+            canvas.style.width = "fit-content";
+        });
+    </script>
+
+
+</body>
+
+</html>
