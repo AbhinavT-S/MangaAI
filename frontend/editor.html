@@ -28,6 +28,7 @@
                         "background-light": "#f6f8f6",
                         "background-dark": "#0D0D0F", // User requested #0D0D0F
                         "panel-dark": "#161619",
+                        "surface-dark": "#1A1A1E",
                     },
                     fontFamily: {
                         "display": ["Manrope", "sans-serif"]
@@ -147,11 +148,11 @@
 <body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-white overflow-hidden h-screen flex flex-col">
     <!-- Top Navigation -->
     <header class="flex-none flex items-center justify-between border-b border-[#2c3928] bg-[#0D0D0F]/90 backdrop-blur-md px-8 py-4 z-50">
-        <div class="flex items-center gap-4 text-white">
-            <div class="flex items-center justify-center size-10 rounded-full bg-primary/20 text-primary">
-                <span class="material-symbols-outlined text-3xl">auto_stories</span>
+        <div class="flex items-center gap-3">
+            <div class="size-10 bg-surface-dark rounded-xl flex items-center justify-center border border-white/10 text-primary">
+                <span class="material-symbols-outlined text-2xl">auto_awesome_mosaic</span>
             </div>
-            <h2 class="text-white text-xl font-bold leading-tight tracking-tight">MangaAI</h2>
+            <h1 class="text-xl font-bold tracking-tight text-white">Manga<span class="text-primary">AI</span></h1>
         </div>
         <div class="flex flex-1 justify-end gap-8 items-center">
             <nav class="hidden md:flex items-center gap-9">
@@ -290,6 +291,12 @@
 
                 <!-- PANEL GRID (AUTO HEIGHT) -->
                 <div id="panelGrid" class="grid gap-2 p-4 bg-white"></div>
+
+                <!-- Watermark -->
+                <div class="absolute bottom-1 right-2 flex items-center gap-1 opacity-50 pointer-events-none">
+                    <span class="material-symbols-outlined text-[10px] text-gray-400">auto_awesome_mosaic</span>
+                    <span class="text-[8px] font-bold text-gray-400 font-sans tracking-widest uppercase">MangaAI</span>
+                </div>
 
             </div>
         </section>
@@ -518,8 +525,48 @@
             }
 
 
+            let width = 512;
+            let height = 768;
+
+            // Dynamically calculate dimensions based on the selected panel's aspect ratio
+            if (selectedPanel) {
+                // Get the actual displayed size of the panel (unscaled by zoom if possible, or relative)
+                // Use offsetWidth/Height which includes border/padding.
+                const rect = selectedPanel.getBoundingClientRect();
+                
+                // We want high resolution, so let's multiply the display size (which is small in the editor)
+                // The editor canvas is roughly 400x600 in base size.
+                // A full width panel is ~380px. We want that to be ~1024px or 768px in generation.
+                // Scale factor of ~2.5 or 3 relative to base pixels.
+                
+                // Simpler approach: Maintain aspect ratio, maximize within 512x768 approx limits or 768x768.
+                // Actually, let's just reverse-engineer the "generator.js" logic.
+                
+                // We can just use the panel's current aspect ratio.
+                const ratio = selectedPanel.offsetWidth / selectedPanel.offsetHeight;
+                
+                // Base size target (e.g., 512*768 area) represents ~393k pixels
+                // sqrt(393216 * ratio) = width
+                
+                const basePixels = 512 * 768; 
+                width = Math.round(Math.sqrt(basePixels * ratio));
+                height = Math.round(width / ratio);
+
+                // Snap to multiple of 8
+                width = Math.round(width / 8) * 8;
+                height = Math.round(height / 8) * 8;
+
+                // Clamp
+                width = Math.max(256, Math.min(width, 1024));
+                height = Math.max(256, Math.min(height, 1024));
+            }
+
             regenPanelBtn.innerText = "Regenerating...";
             regenPanelBtn.disabled = true;
+
+            const storedSeed = localStorage.getItem("mangaSeed");
+            const storedNegative = localStorage.getItem("mangaNegative") || "";
+            const seed = storedSeed ? parseInt(storedSeed) : -1;
 
             try {
                 const res = await fetch("http://localhost:3000/generate", {
@@ -529,10 +576,11 @@
                     },
                     body: JSON.stringify({
                         prompt,
-                        negative_prompt: LOCKED_NEGATIVE,
-                        width: 512,
-                        height: 768,
-                        steps: 25
+                        negative_prompt: `${LOCKED_NEGATIVE}, ${storedNegative}`,
+                        width: width,
+                        height: height,
+                        steps: 25,
+                        seed: seed
                     }),
                 });
 
@@ -572,8 +620,37 @@
 
             const canvasImage = await html2canvas(canvas, {
                 scale: 2,
-                backgroundColor: "#ffffff"
+                backgroundColor: "#ffffff",
+                useCORS: true // Ensure external images don't taint canvas if applicable
             });
+
+            // ✅ FORCE GRAYSCALE & CONTRAST (Pixel Manipulation)
+            // html2canvas ignores CSS filters, so we modify the pixels manually.
+            const ctx = canvasImage.getContext("2d");
+            const imgData = ctx.getImageData(0, 0, canvasImage.width, canvasImage.height);
+            const data = imgData.data;
+
+            for (let i = 0; i < data.length; i += 4) {
+                const r = data[i];
+                const g = data[i + 1];
+                const b = data[i + 2];
+
+                // 1. Convert to Grayscale (Luminosity)
+                let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+
+                // 2. Apply Contrast (approx 1.25 like CSS)
+                // Formula: ((color - 128) * factor) + 128
+                gray = ((gray - 128) * 1.25) + 128;
+
+                // Clamp values 0-255
+                gray = Math.max(0, Math.min(255, gray));
+
+                data[i] = gray;
+                data[i + 1] = gray;
+                data[i + 2] = gray;
+            }
+
+            ctx.putImageData(imgData, 0, 0);
 
             const link = document.createElement("a");
             link.download = "manga-page.png";
@@ -602,19 +679,31 @@
             editable.style.fontFamily = fontFamilySelect.value;
         });
 
-        /* ================= ZOOM SYSTEM ================= */
+        /* ================= ZOOM & PAN SYSTEM ================= */
 
         const zoomInBtn = document.getElementById("zoomInBtn");
         const zoomOutBtn = document.getElementById("zoomOutBtn");
         const zoomLabel = document.getElementById("zoomLabel");
+        const workspace = document.querySelector("section"); // The container
 
         let zoomLevel = 1;
+        let panX = 0;
+        let panY = 0;
+        let isPanning = false;
+        let startPanX = 0;
+        let startPanY = 0;
+
         const MIN_ZOOM = 0.5;
         const MAX_ZOOM = 2;
         const ZOOM_STEP = 0.1;
 
-        function applyZoom() {
-            canvas.style.transform = `scale(${zoomLevel})`;
+        function updateTransform() {
+            // Apply both scale and translation
+            canvas.style.transform = `translate(${panX}px, ${panY}px) scale(${zoomLevel})`;
+            // Important: Change origin to top-left so translation works predictably, 
+            // or keep center and adjust math. standardizing on center for now but resetting origin usually helps panning.
+            // Actually, for pan + zoom, standard is 0 0 or center. Let's try center first.
+            // If we use translate, standard CSS transform order is essential.
             canvas.style.transformOrigin = "center center";
             zoomLabel.textContent = Math.round(zoomLevel * 100) + "%";
         }
@@ -622,19 +711,46 @@
         zoomInBtn.addEventListener("click", () => {
             if (zoomLevel < MAX_ZOOM) {
                 zoomLevel += ZOOM_STEP;
-                applyZoom();
+                updateTransform();
             }
         });
 
         zoomOutBtn.addEventListener("click", () => {
             if (zoomLevel > MIN_ZOOM) {
                 zoomLevel -= ZOOM_STEP;
-                applyZoom();
+                updateTransform();
+            }
+        });
+
+        /* ===== PANNING LOGIC ===== */
+        // We attach listener to the workspace background
+        workspace.addEventListener("mousedown", (e) => {
+            // Only pan if clicking the background (section), not the canvas itself or tools
+            if (e.target.closest("#mangaCanvas")) return;
+            
+            isPanning = true;
+            startPanX = e.clientX - panX;
+            startPanY = e.clientY - panY;
+            workspace.style.cursor = "grabbing";
+        });
+
+        document.addEventListener("mousemove", (e) => {
+            if (!isPanning) return;
+            e.preventDefault();
+            panX = e.clientX - startPanX;
+            panY = e.clientY - startPanY;
+            updateTransform();
+        });
+
+        document.addEventListener("mouseup", () => {
+            if (isPanning) {
+                isPanning = false;
+                workspace.style.cursor = "default";
             }
         });
 
         /* Initial */
-        applyZoom();
+        updateTransform();
     </script>
 
 
@@ -668,14 +784,14 @@
                 // Use saved layout if available, otherwise use default positioning
                 if (savedLayout && savedLayout[index]) {
                     const layout = savedLayout[index];
-                    panel.className = "absolute border-[3px] border-black bg-white cursor-pointer";
+                    panel.className = "absolute border-[3px] border-black bg-white cursor-pointer overflow-hidden";
                     panel.style.left = layout.x + "%";
                     panel.style.top = layout.y + "%";
                     panel.style.width = layout.width + "%";
                     panel.style.height = layout.height + "%";
                 } else {
                     // Fallback to grid-based positioning
-                    panel.className = "relative border-2 border-black bg-white cursor-pointer";
+                    panel.className = "relative border-2 border-black bg-white cursor-pointer overflow-hidden";
                 }
 
                 panel.dataset.index = index;

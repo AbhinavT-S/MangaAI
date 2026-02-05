@@ -6,11 +6,14 @@ document.addEventListener("DOMContentLoaded", () => {
     generateBtn.addEventListener("click", async () => {
 
         const characterPrompt = document.getElementById("characterPrompt")?.value.trim();
-        const story = document.getElementById("myText").value.trim();
-        const panels = parseInt(document.getElementById("layoutSelect").value);
+        const backgroundPrompt = document.getElementById("backgroundPrompt")?.value.trim();
+        
+        // Collect all panel prompts from the grid
+        const panelInputs = document.querySelectorAll(".panel-prompt-input");
+        const panelActions = Array.from(panelInputs).map(input => input.value.trim());
 
-        if (!characterPrompt || !story) {
-            alert("Enter both character and story prompt");
+        if (!characterPrompt || !backgroundPrompt || panelActions.every(p => !p)) {
+            alert("Please enter character, background, and at least one panel prompt.");
             return;
         }
 
@@ -24,13 +27,16 @@ document.addEventListener("DOMContentLoaded", () => {
             // ✅ Generate a consistent seed for character consistency
             const characterSeed = Math.floor(Math.random() * 4294967295);
             
-            // ✅ STORY → N PANEL PROMPTS
-            const panelPrompts = storyToPanels(characterPrompt, story, panels);
-
             const images = [];
+            const finalPrompts = [];
 
-            for (let i = 0; i < panelPrompts.length; i++) {
+            for (let i = 0; i < panelActions.length; i++) {
+                const action = panelActions[i] || "standing"; // Default action if empty
                 const userNegative = document.getElementById("negativePrompt")?.value || "";
+
+                // ✅ CONSTRUCT PROMPT: Character + Background + Specific Action + Style
+                const finalPrompt = `(${characterPrompt}:1.3), ${backgroundPrompt}, ${action}, ${LOCKED_STYLE}`;
+                finalPrompts.push(finalPrompt);
 
                 // Calculate image dimensions based on panel layout
                 let width = 512;
@@ -62,12 +68,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({
-                        prompt: panelPrompts[i],
+                        prompt: finalPrompt,
                         negative_prompt: `${LOCKED_NEGATIVE}, ${userNegative}`,
                         width: width,
                         height: height,
                         steps: 25,
-                        seed: characterSeed  // Same seed for all panels = consistent character
+                        seed: characterSeed
                     }),
                 });
 
@@ -80,12 +86,13 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             // ✅ STORE DATA
-            localStorage.setItem("mangaPanels", panels);
+            localStorage.setItem("mangaPanels", panelActions.length);
             localStorage.setItem("mangaImages", JSON.stringify(images));
-            localStorage.setItem(
-                "mangaPanelPrompts",
-                JSON.stringify(panelPrompts)
-            );
+            localStorage.setItem("mangaPanelPrompts", JSON.stringify(finalPrompts));
+            
+            // Store consistency data
+            localStorage.setItem("mangaSeed", characterSeed);
+            localStorage.setItem("mangaNegative", document.getElementById("negativePrompt")?.value || "");
 
             // ✅ GO TO EDITOR
             window.location.href = "editor.html";
@@ -99,84 +106,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 });
 const LOCKED_STYLE =
-    "pure black and white manga, japanese manga style, ink drawing, " +
-    "high contrast, sharp clean ink lines, no shading, no grayscale, " +
-    "panel composition, cinematic framing";
+    "Japanese manga panel, pure black and white, high contrast ink, sharp clean line art, cinematic framing";
 
 const LOCKED_NEGATIVE =
     "color, colored, grayscale, blurry, soft shading, " +
     "realistic, photorealistic, western comic, 3d render";
-
-
-/* ================= STORY → PANELS ================= */
-
-function storyToPanels(character, story, panels) {
-    // Generate narrative beats based on the story
-    const beats = generateStoryBeats(story, panels);
-    
-    // Enhanced character description with emphasis for consistency
-    const characterDesc = `(${character}:1.3), consistent character, same person throughout`;
-
-    return Array.from({ length: panels }, (_, i) => {
-        return `${characterDesc}, ${beats[i]}, Japanese manga panel, pure black and white, high contrast ink, sharp clean line art, cinematic framing`;
-    });
-}
-
-/**
- * Intelligently breaks down a story into sequential narrative beats
- * @param {string} story - The main story/scenario
- * @param {number} panelCount - Number of panels to generate
- * @returns {string[]} Array of narrative beats for each panel
- */
-function generateStoryBeats(story, panelCount) {
-    // Common narrative structures for different panel counts
-    const storyTemplates = {
-        1: (s) => [s],
-        
-        2: (s) => [
-            `${s}, beginning of the scene`,
-            `${s}, conclusion or reaction`
-        ],
-        
-        3: (s) => [
-            `${s}, establishing shot, scene begins`,
-            `${s}, action intensifies, middle of scene`,
-            `${s}, climax or resolution`
-        ],
-        
-        4: (s) => [
-            `${s}, wide establishing shot`,
-            `${s}, character reacts, tension builds`,
-            `${s}, peak moment, dramatic action`,
-            `${s}, aftermath, emotional response`
-        ],
-        
-        5: (s) => [
-            `${s}, calm before, setting the scene`,
-            `${s}, initial action begins`,
-            `${s}, tension escalates, close-up reaction`,
-            `${s}, climactic moment, dramatic peak`,
-            `${s}, resolution, emotional conclusion`
-        ]
-    };
-
-    // Use template if available, otherwise create dynamic progression
-    if (storyTemplates[panelCount]) {
-        return storyTemplates[panelCount](story);
-    }
-
-    // For other panel counts, create a progression
-    return Array.from({ length: panelCount }, (_, i) => {
-        const progress = i / (panelCount - 1);
-        if (progress < 0.33) {
-            return `${story}, beginning, establishing the scene`;
-        } else if (progress < 0.66) {
-            return `${story}, action progresses, tension builds`;
-        } else {
-            return `${story}, climax and resolution`;
-        }
-    });
-}
 
 
 

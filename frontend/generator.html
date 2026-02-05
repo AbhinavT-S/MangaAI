@@ -111,10 +111,10 @@
                         <!-- Prompt Input -->
                         <div id="promptInput" class="space-y-3">
                             <label class="flex items-center justify-between text-sm font-semibold text-white/80 pl-1">
-                                <span class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">edit_note</span> Story Prompt</span>
+                                <span class="flex items-center gap-2"><span class="material-symbols-outlined text-primary text-[18px]">panorama</span> Background Prompt</span>
                             </label>
                             <div class="relative group">
-                                <textarea id="myText" class="w-full bg-input-dark border border-white/10 rounded-xl p-5 text-base text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all min-h-[180px] resize-none leading-relaxed" placeholder="Describe your scene (e.g., A cyberpunk samurai walking in rain, neon lights reflecting on wet pavement, high contrast, manga style...)"></textarea>
+                                <textarea id="backgroundPrompt" class="w-full bg-input-dark border border-white/10 rounded-xl p-5 text-base text-white placeholder:text-white/20 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-transparent transition-all min-h-[100px] resize-none leading-relaxed" placeholder="Describe the setting that applies to ALL panels (e.g., Cyberpunk city at night, neon lights, rain, high contrast...)"></textarea>
                                 <div class="space-y-2 mt-4">
                                     <label class="flex items-center gap-2 text-sm font-semibold text-white/70 pl-1">
                                         <span class="material-symbols-outlined text-primary text-[18px]">block</span> Negative Prompt (optional)
@@ -254,11 +254,14 @@
             panel.style.height = layout.height + "%";
 
             panel.innerHTML = `
-                <div class="w-full h-full flex flex-col items-center justify-center pointer-events-none">
-                    <span class="material-symbols-outlined text-6xl text-gray-300">image</span>
-                    <span class="text-sm text-gray-400 font-bold mt-2">Panel ${number}</span>
+                <div class="absolute inset-2 flex flex-col z-10">
+                    <textarea class="panel-prompt-input w-full h-full bg-white/90 text-black text-xs font-medium p-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary resize-none placeholder:text-gray-400" 
+                    placeholder="Panel ${number} Action..."></textarea>
                 </div>
-                <div class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-primary cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto"></div>
+                <div class="w-full h-full flex flex-col items-center justify-center pointer-events-none absolute inset-0 z-0 opacity-20">
+                    <span class="material-symbols-outlined text-6xl text-gray-400">image</span>
+                </div>
+                <div class="resize-handle absolute bottom-0 right-0 w-4 h-4 bg-primary cursor-se-resize opacity-0 group-hover:opacity-100 transition-opacity pointer-events-auto z-20"></div>
             `;
 
             makePanelDraggable(panel);
@@ -270,6 +273,14 @@
         function makePanelDraggable(panel) {
             panel.addEventListener("mousedown", (e) => {
                 if (e.target.classList.contains("resize-handle")) return;
+                
+                // Allow focus on inputs/textareas
+                if (e.target.tagName.toLowerCase() === 'textarea' || e.target.tagName.toLowerCase() === 'input') {
+                    panel.classList.add("border-primary", "border-[4px]");
+                    panel.classList.remove("border-black", "border-[3px]");
+                    selectedPanel = panel;
+                    return;
+                }
                 
                 e.preventDefault();
                 selectedPanel = panel;
